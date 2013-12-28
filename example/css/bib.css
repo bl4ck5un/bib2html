@@ -1,0 +1,74 @@
+/* Book format ********************************/
+.book.author{
+}
+
+.book.title{
+	font-style: italic;
+}
+
+.book.publisher{
+}
+
+.book.edition{
+}
+
+.book.year{
+}
+/**********************************************/
+
+
+/* Conference format **************************/
+.conference.author{
+}
+
+.conference.title:before{
+	font-family: Helvetica,Arial,"Lucida Grande",sans-serif;
+	font-size: 16px;
+    content: open-quote;
+}
+
+.conference.title:after{
+	font-family: Helvetica,Arial,"Lucida Grande",sans-serif;
+	font-size: 16px;
+    content: close-quote;
+}
+
+.conference.booktitle{
+	font-style: italic;
+}
+
+.conference.address{
+}
+
+.conference.year{
+}
+/**********************************************/
+
+
+/* Journal format *****************************/
+.article.author{
+}
+
+.article.title:before{
+	font-family: Helvetica,Arial,"Lucida Grande",sans-serif;
+    content: open-quote;
+}
+
+.article.title:after{
+	font-family: Helvetica,Arial,"Lucida Grande",sans-serif;
+    content: close-quote;
+}
+
+.article.journal{
+	font-style: italic;
+}
+
+.article.volume{
+}
+
+.article.pages{
+}
+
+.article.year{
+}
+/**********************************************/
