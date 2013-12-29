@@ -80,3 +80,17 @@ The script will replace any occurrence of the placeholders in the file with the 
 ### CSS styling
 
 The CSS classes used to style the items loosely follow an OOCSS (Object Oriented CSS) pattern, i.e., the edition tag of a book entry uses ```class="book edition"``` and the title tag of an article entry uses ```class="article title"```. The default styling provided in example/css/bib.css mimics the IEEE reference style and contains all the CSS classes used in the current version.
+
+
+Issues
+------
+
+Issues/suggestions should be report via the GitHub repository:
+
+https://github.com/lchamon/pubs2html
+
+
+Author
+------
+
+Chamon [luizchamon] [gmail]
