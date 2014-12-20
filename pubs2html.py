@@ -1,60 +1,114 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
+import os
+import argparse
+from copy import deepcopy
 
-import os, time, argparse
-import outputhtml, bibparser
+import bibtexparser
+from bibtexparser.bparser import BibTexParser
+from jinja2 import Environment, FileSystemLoader
+
+from auxfun import *
+
 
 PATH = os.getcwdu()
-
 
 # Create command line arguments parser
 parser = argparse.ArgumentParser()
 
 # Command line arguments
-parser.add_argument('-t', '--template', default = os.path.join( PATH, 'template.html' ), help = 'Path of template file. Default: ./template.html')
-parser.add_argument('-o', '--output', default = os.path.join( PATH, 'pubs.html' ), help = 'Path of output file (if the file already exists, it will be overwritten). Default: ./pubs.html')
-parser.add_argument('files', nargs = '+', help = 'Path to BibTeX file(s) to convert')
+parser.add_argument('-t', '--template',
+                    default=os.path.join(PATH, 'template.html'),
+                    help='Path of templates folder. Default: ./template.html')
+parser.add_argument('-s', '--style',
+                    default=os.path.join(PATH, 'styles/default'),
+                    help='Path to style folder. Default: ./styles/default/')
+parser.add_argument('-o', '--output',
+                    default=os.path.join(PATH, 'pubs.html'),
+                    help='Output file (if the file already exists, '
+                         'it will be overwritten). Default: ./pubs.html')
+parser.add_argument('files', nargs='+', help='Path to BibTeX file(s) to convert',
+                    default=os.path.join(PATH, 'pubs.bib'))
 
 # Parse command line arguments
 args = parser.parse_args()
 
 
-# Check template file exists
-if os.path.isfile(args.template):
-	# Start conversion
-	# Create empty database
-	db = []
+if not os.path.isdir(args.style):
+    raise Exception('Style argument [' + args.style + '] must be a folder.')
 
-	# for filePath in FILE_LIST:
-	for filePath in args.files:
-		# Read BibTeX file
-		try:
-			inputFile = open( filePath, 'r' )
-			bibtex = inputFile.read()
-			inputFile.close()
-
-			# Separate each BibTeX entry in the file
-			bibparser.parse( bibtex, db )
-		except IOError:
-			print 'An error occured while processing the file "' + filePath + '". Its content will be ignored.'
+if not os.path.isfile(args.template):
+    raise Exception('Template [' + args.template + '] must be a file.')
 
 
-	# Sort entries by year (primary key, reverse) then author (secondary key)
-	db.sort(key = lambda entry: entry['author'])
-	db.sort(key = lambda entry: entry['year'], reverse = True)
+# Start BibTeX files parsing
+# Create empty database
+db = []
 
-	try:
-		# Create output and template file
-		outputFile = open( args.output, 'w' )
-		templateFile = open( args.template, 'r' )
+# Parse each file and merge databases
+for filePath in args.files:
+    # Read BibTeX file
+    try:
+        # Add customizations to the BibTeX parser
+        parser = BibTexParser()
+        parser.customization = customizations
 
-		# Generate HTML file
-		outputhtml.gen( db, templateFile, outputFile )
+        # Load and parse BibTeX file
+        inputFile = open(filePath, 'r')
+        dbTemp = bibtexparser.load(inputFile, parser=parser).entries
+        inputFile.close()
 
-		# Close files
-		templateFile.close()
-		outputFile.close()
-	except IOError:
-		print 'An error occured while processing the template and output files. The program will exit without completing the task.'
+        # Check if entry title isn't duplicated then add entry to database
+        for entryTemp in dbTemp:
+            if not any(entryTemp['title'].lower() == entry['title'].lower() for entry in db):
+                db.append(deepcopy(entryTemp))
+
+    except IOError:
+        print ('An error occured while processing [' +
+               filePath + ']. Its content will be ignored.')
+
+# Sort entries by year (primary key, reverse) then author (secondary key)
+# db.sort(key=lambda entry: entry['author'])
+# db.sort(key=lambda entry: entry['year'], reverse=True)
+
+# Format entries according to selected style and write to file
+try:
+    # Setup Jinja environment for BibTeX entries styling
+    bibEnv = Environment(loader=FileSystemLoader(args.style))
+    supportedStyles = [os.path.splitext(file)[0] for file in bibEnv.list_templates('html')]
+    bibEnv.filters['ordinal'] = ordinal
+    bibEnv.filters['author_join'] = author_join
+
+    for entry in db:
+        if entry['ENTRYTYPE'] in supportedStyles:
+            bibTemplate = bibEnv.get_template(entry['ENTRYTYPE'] + '.html')
+            entry['formatted'] = bibTemplate.render(entry)
+
+    # Read in css file or leave blank if it does not exist
+    cssPath = os.path.join(args.style, 'bib.min.css')
+    if os.path.isfile(cssPath):
+        cssFile = open(cssPath, 'r')
+        css = cssFile.read()
+        cssFile.close()
+    else:
+        css = ''
+
+except:
+    print ('An error occured while processing the style files.'
+           'The program will exit without completing the task.')
+
 else:
-	print 'Template file was not found at "' + args.template + '".'
+    try:
+        # Setup Jinja environment for output template
+        outputEnv = Environment(loader=FileSystemLoader(os.path.dirname(args.template)))
+        outputEnv.filters['keeponly'] = keeponly
+        outputTemplate = outputEnv.get_template(os.path.basename(args.template))
+
+        # Write to output file
+        outputFile = open(args.output, 'w')
+        outputFile.write(outputTemplate.render(db=db, css=css).encode('utf8'))
+        outputFile.close()
+
+    except IOError:
+        print ('An error occured while processing the template file.'
+               'The program will exit without completing the task.')
