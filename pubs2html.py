@@ -85,7 +85,7 @@ try:
             entry['formatted'] = bibTemplate.render(entry)
 
     # Read in css file or leave blank if it does not exist
-    cssPath = os.path.join(args.style, 'bib.min.css')
+    cssPath = os.path.join(args.style, 'bib.css')
     if os.path.isfile(cssPath):
         cssFile = open(cssPath, 'r')
         css = cssFile.read()

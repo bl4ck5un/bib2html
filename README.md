@@ -1,85 +1,117 @@
 Pubs2HTML
 =========
 
-These scripts will generate a publication web pages based on BibTeX files and a custom template. It outputs an HTML list markup with CSS classes that allows different styling of the elements. The publications are ordered in reverse chronological order and then in alphabetical order of first author name.
+Generate publication web pages from BibTeX files.
 
+This is a major rewrite of the backend of Pubs2HTML. It now uses [bibtexparser](https://pypi.python.org/pypi/bibtexparser) to parse the `.bib` and [Jinja2](http://jinja.pocoo.org/) for the reference styling and the output page template.
+
+```
+./pubs2html.py -s styles/ieee -t example/template.html example/pubs.bib
+```
 
 
 Usage
 -----
 
 ```
-./pubs2html.py [-h] [-t TEMPLATE] [-o OUTPUT] files [files ...]
+./pubs2html.py [-h] [-s STYLE] [-t TEMPLATE] [-o OUTPUT] files [files ...]
 
 -h
 Display help
 
+-s, --style STYLE
+Path to BibTeX style folder. Default: ./styles/default/
+
 -t, --template TEMPLATE
-Path of template file. Default: ./template.html
+Path to Jinja template file. Default: ./template.html
 
 -o, --output OUTPUT
-Path of output file (if the file already exists, it will be overwritten). Default: ./pubs.html
+Output file (if the file already exists, it will be overwritten). Default: ./pubs.html
 
 files
 Path to BibTeX file(s) to convert
 ```
 
-The script will output errors to stdout specifying the error and the entry where it occurred. It will, however, skip the problematic file and keep processing the provided BibTeX databases. Hence, it will generate a web page with as many entries as it could parse.
-
-You can run this script in a cron to automatically update your publications page every week or month. The advantage of this method is that you deliver a static page to users (which is faster), even though it is automatically updated from time to time.
+The script aggregates all BibTeX files into a single database which it uses to create the page. It will skip any .bib files that it cannot find or parse.
 
 
 
-### BibTeX format
+### BibTeX files
 
-This script uses a fairly simple BibTeX parser, so it does have a few limitations. Some more advanced BibTeX tags that are unnecessary for a common publication web page are not supported and will simply be ignored. For the script to work, your .bib file must follow these rules:
+Bibtexparser mimics very well the parsing behavior of BibTeX and you should have no problem using any of your `.bib` files directly. Anything like the following should work perfectly:
 
-- Entries must be enclosed in braces ```{}``` (even though BibTeX supports other characters)
-- Tag values must be enclosed in double quotes ```""``` (again this is despite BibTeX's support for other characters)
-- Each tag should be on its own line
+	@ENTRY{
+		tag1 = "",
+		tag2 = "",
+		tag3 = ""
+	}
 
-Here's a template of what an entry should look like:
+Naturally, the better the formatting of your files (especially the content of each tag), the more likely Pubs2HTML will output a nice looking page out of them.
+
+
+
+### Styles
+
+A Pubs2HTML style is a folder containing HTML Jinja templates for each supported entry type. The templates define the format of the HTML list items `<li></li>` that will be populated with information from the `.bib` files. Style filenames should be of the form `entrytype.html`. When the Pubs2HTML finds an entry type for which a style has not been defined, it silently ignores it.
+
+Pubs2HTML also looks for a `bib.css` file and makes it available to the output page template through the `css` variable.
+
+
+#### Custom Jinja filters
+
+Pubs2HTML provides a few Jinja filters to make styling references a little easier.
+
+* `ordinal`: transforms a cardinal input into an ordinal number (useful for edition numbering);
 ```
-@ENTRY{
-tag1 = "",
-tag2 = "",
-tag3 = ""
-}
+<span ...>{{ edition|ordinal }} ed.</span>
+```
+
+* `author_join`: like join but for list of words (convenient authors list). It allows you to specify a common separator (default: `,`), a special separator for the last case (default: `, and`), and a special separator for the two value case (default: `and`);
+```
+<span ...>{{ author|author_join }}</span>
+<span ...>{{ author|author_join(', ', ' and ') }}</span>
 ```
 
 
-#### Supported entry types
+
+
+#### The IEEE-like style
+Pubs2HTML ships with an "IEEE-like" style definition located in `styles/ieee`. It makes no attempt at being accurate with relation to `IEEEtrans.bst`, but it should have its familiar look. The following entry types are supported:
+
 1. InProceedings
 2. Article
 3. Book
+4. TechReport
 
+The `ieee` style uses patterns loosely inspired on OOCSS (Object Oriented CSS), i.e., the edition tag of a book entry uses ```class="book edition"``` and the title tag of an article entry uses ```class="article title"```. If the style you are attempting to reproduce is similar to that of the IEEE, you may not need to learn Jinja at all: you could get away with just editing `bib.css`.
 
-#### Additional PDF URL tag
-You can provide an URL to your paper using the special tag ```pdfurl```, e.g.,
-
-```
-pdfurl = "http://www.lps.usp.br/chamon/pdf/chamon_eusipco2013.pdf"
-```
-
-It will then show up as a link in the markup. If absent, the link is not displayed.
 
 
 
 ### HTML template
 
-The script will replace any occurrence of the placeholders in the file with the generated markup. Hence, by providing a valid HTML file you can automatically generate your publication web page. The supported placeholders are
+The output page template is also written using the Jinja templating language. The template design documentation can be found [here](http://jinja.pocoo.org/docs/dev/templates/). Pubs2HTML gives you access to two variables:
 
-	- @@INPROCEEDINGS@@
-	- @@ARTICLE@@
-	- @@BOOK@@
+* `db`: entries parsed from the BibTeX files. The template has access to both the individual tags (`title`, `author`, `ENTRYTYPE`) and to the formatted ouput of the style (`formatted`).
 
-**Note**: Placeholders should be placed on an _empty line_.
+* `css`: content of `css.bib` file (or an empty string if the file does not exist).
+
+The example template `example/plain.html` can be used as a reference. In general, you should be able turn the HTML of your current publication page into a template with only a few lines of code.
 
 
 
-### CSS styling
+#### Custom Jinja filters
 
-The CSS classes used to style the items loosely follow an OOCSS (Object Oriented CSS) pattern, i.e., the edition tag of a book entry uses ```class="book edition"``` and the title tag of an article entry uses ```class="article title"```. The default styling provided in example/css/bib.css mimics the IEEE reference style and contains all the CSS classes used in the current version.
+Since you may not want to bundle all your publications together, Pubs2HTML provides the following Jinja filter:
+
+* `keeponly`: filters by entry type;
+```
+<ul id="pubs_list">
+	{% for entry in db|keeponly('article') %}
+		{{ entry.formatted }}
+	{%- endfor %}
+	</ul>
+```
 
 
 Issues
@@ -88,9 +120,3 @@ Issues
 Issues/suggestions should be report via the GitHub repository:
 
 https://github.com/lchamon/pubs2html
-
-
-Author
-------
-
-Chamon [luizchamon] [gmail]
