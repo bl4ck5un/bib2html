@@ -1,0 +1,12 @@
+<li><span class="{{ ENTRYTYPE }} author">{{ author|author_join }}</span>, <span class="{{ ENTRYTYPE }} title">{{ title }}</span>.
+<span class="{{ ENTRYTYPE }} publisher">{{ publisher }}</span>
+{%- if edition is defined -%}
+  , <span class="{{ ENTRYTYPE }} edition">{{ edition|ordinal }} ed. </span>
+{%- else -%}
+  . 
+{% endif -%}
+<span class="{{ ENTRYTYPE }} year">{{ year }}</span>. 
+{% if link is defined -%}
+  [<a href="{{ link }}">pdf</a>].
+{%- endif -%}  
+</li>
