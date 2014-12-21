@@ -67,9 +67,6 @@ for filePath in args.files:
         print ('An error occured while processing [' +
                filePath + ']. Its content will be ignored.')
 
-# Sort entries by year (primary key, reverse) then author (secondary key)
-# db.sort(key=lambda entry: entry['author'])
-# db.sort(key=lambda entry: entry['year'], reverse=True)
 
 # Format entries according to selected style and write to file
 try:
