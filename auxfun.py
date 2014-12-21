@@ -29,9 +29,9 @@ def ordinal(value):
         return value + 'th'
 
 
-def keeponly(value, type):
-    """ Entry type filter """
-    return [entry for entry in value if entry['ENTRYTYPE'] == type]
+def keeponly(value, val, field='ENTRYTYPE'):
+    """ Filter by BibTeX field """
+    return [entry for entry in value if entry[field] == str(val)]
 
 
 def author_join(value, d=u', ', last=u', and ', two=u' and '):
