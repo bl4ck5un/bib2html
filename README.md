@@ -96,7 +96,7 @@ The output page template is also written using the Jinja templating language. Th
 
 * `css`: content of `css.bib` file (or an empty string if the file does not exist).
 
-The example template `example/plain.html` can be used as a reference. In general, you should be able turn the HTML of your current publication page into a template with only a few lines of code.
+The example template `example/plain.html` provides typical functionalities and can be used as a reference. In general, you should be able turn the HTML of your current publication page into a template with only a few lines of code.
 
 
 
@@ -104,14 +104,22 @@ The example template `example/plain.html` can be used as a reference. In general
 
 Since you may not want to bundle all your publications together, Pubs2HTML provides the following Jinja filter:
 
-* `keeponly`: filters by entry type;
+* `keeponly`: filters entries by field. Field values are converted to strings automatically. The default field is the entry type (i.e., `ENTRYTYPE`);
 ```
 <ul id="pubs_list">
 	{% for entry in db|keeponly('article') %}
 		{{ entry.formatted }}
 	{%- endfor %}
-	</ul>
+</ul>
+<ul id="pubs_list">
+	{% for entry in db|keeponly(2014, field='year') %}
+		{{ entry.formatted }}
+	{%- endfor %}
+</ul>
 ```
+
+The same effect could be obtained by using the built in Jinja filter `selectattr(field, 'equalto', value)`. However, the `equalto` test will only be part of Jinja 2.8, so for now this should work.
+
 
 
 Issues
