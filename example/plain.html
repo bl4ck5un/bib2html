@@ -12,48 +12,68 @@
 
 <body>
 
-<h1>BOOK</h1>
+<h1>BY TYPE</h1>
+
+<h2>BOOK</h2>
 
   <ul id="pubs_list">
 
-  {% for entry in db|keeponly('book') %}
+  {% for entry in db|keeponly('book')|sort(attribute='author')|sort(attribute='year') %}
     {{ entry.formatted }}
   {%- endfor %}
 
   </ul>
 
 
-<h1>JOURNAL</h1>
+<h2>JOURNAL</h2>
 
   <ul id="pubs_list">
 
-  {% for entry in db|keeponly('article') %}
+  {% for entry in db|keeponly('article')|sort(attribute='author')|sort(attribute='year') %}
     {{ entry.formatted }}
   {%- endfor %}
-  
+
   </ul>
 
 
-<h1>CONFERENCE</h1>
+<h2>CONFERENCE</h2>
 
   <ul id="pubs_list">
 
-  {% for entry in db|keeponly('inproceedings') %}
+  {% for entry in db|keeponly('inproceedings')|sort(attribute='author')|sort(attribute='year') %}
     {{ entry.formatted }}
   {%- endfor %}
-  
+
   </ul>
 
 
-<h1>TECHNICAL REPORTS</h1>
+<h2>TECHNICAL REPORTS</h2>
 
   <ul id="pubs_list">
 
-  {% for entry in db|keeponly('techreport') %}
+  {% for entry in db|keeponly('techreport')|sort(attribute='author')|sort(attribute='year') %}
     {{ entry.formatted }}
   {%- endfor %}
-  
+
   </ul>
+
+
+<h1>BY YEAR</h1>
+
+{% for year in range(2008, 2015)|reverse %}
+{% if db|keeponly(year, field='year') %}
+<h2>{{ year }}</h2>
+
+  <ul id="pubs_list">
+
+    {% for entry in db|keeponly(year, field='year')|sort(attribute='author') %}
+      {{ entry.formatted }}
+    {%- endfor %}
+
+  </ul>
+{% endif %}
+{% endfor %}
+
 
 
 <!-- FOOTER -->
