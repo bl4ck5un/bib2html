@@ -14,7 +14,7 @@ the output page template.
 Warning
 -------
 
-The bibtexparser version available form [PyPi](https://pypi.python.org/pypi/bibtexparser)
+The bibtexparser version available from [PyPi](https://pypi.python.org/pypi/bibtexparser)
 uses `type` to describe the entry type even though it is a valid BibTeX field.
 Hence, you should upgrade to the version available on GitHub or use the one shipped
 with Pubs2HTML.
