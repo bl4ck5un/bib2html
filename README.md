@@ -3,11 +3,22 @@ Pubs2HTML
 
 Generate publication web pages from BibTeX files.
 
-This is a major rewrite of the backend of Pubs2HTML. It now uses [bibtexparser](https://pypi.python.org/pypi/bibtexparser) to parse the `.bib` and [Jinja2](http://jinja.pocoo.org/) for the reference styling and the output page template.
+This is a major rewrite of the backend of Pubs2HTML. It now uses [bibtexparser](https://github.com/sciunto/python-bibtexparser) to parse the
+`.bib` and [Jinja2](http://jinja.pocoo.org/) for the reference styling and
+the output page template.
 
 ```
 ./pubs2html.py -s styles/ieee -t example/template.html example/pubs.bib
 ```
+
+Warning
+-------
+
+The bibtexparser version available form [PyPi](https://pypi.python.org/pypi/bibtexparser)
+uses `type` to describe the entry type even though it is a valid BibTeX field.
+Hence, you should upgrade to the version available on GitHub or use the one shipped
+with Pubs2HTML.
+
 
 
 Usage
