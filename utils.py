@@ -31,7 +31,8 @@ def ordinal(value):
 
 def keeponly(value, val, field='ENTRYTYPE'):
     """ Filter by BibTeX field """
-    return [entry for entry in value if entry[field] == str(val)]
+    return [entry for entry in value
+            if field in entry.keys() and entry[field] == str(val)]
 
 
 def author_join(value, d=u', ', last=u', and ', two=u' and '):
